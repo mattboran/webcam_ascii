@@ -15,7 +15,8 @@ def frame_to_chars(frame):
     low_res = cv2.flip(low_res, 1).astype(np.uint8)
     char_indices = (low_res / 255 * (chars.size - 1)).astype(np.uint8)
     # Convert ints to characters using the char_map
-    as_chars = np.vectorize(char_map.get)(char_indices)
+    c, inv = np.unique(char_indices, return_inverse=True)
+    as_chars = np.array([char_map[x] for x in c])[inv].reshape(low_res.shape)
     return "\n".join(["".join(row) for row in as_chars])
 
 def main():
@@ -31,14 +32,15 @@ def main():
             ret, frame = cap.read()
             text = frame_to_chars(frame)
             # Write to PIL image
-            pil_img = Image.fromarray(np.zeros((570, 490)))
+            blank_img = np.zeros((580, 500))
+            pil_img = Image.fromarray(blank_img)
             draw = ImageDraw.Draw(pil_img)
             draw.text((0, 0), text, font=font)
             # Convert back to np array and write to stdout
-            img = np.array(pil_img)
-            np_img = cv2.resize(img, (320, 240))
-            uint_img = (np_img * 255).astype(np.uint8)
-            sys.stdout.buffer.write(uint_img.tostring())
+            np_img = np.array(pil_img).astype(np.uint8) * 255
+            np_img = cv2.resize(np_img, (320, 240), interpolation=cv2.INTER_AREA)
+            sys.stdout.buffer.write(np_img.tostring())
+            sys.stdout.buffer.flush()
         except KeyboardInterrupt:
             break
     cap.release()
