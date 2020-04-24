@@ -31,11 +31,13 @@ def main():
             ret, frame = cap.read()
             text = frame_to_chars(frame)
             # Write to PIL image
-            pil_img = Image.fromarray(np.zeros((600, 600)))
+            pil_img = Image.fromarray(np.zeros((570, 490)))
             draw = ImageDraw.Draw(pil_img)
             draw.text((0, 0), text, font=font)
             # Convert back to np array and write to stdout
-            uint_img = (np.array(pil_img) * 255).astype(np.uint8)
+            img = np.array(pil_img)
+            np_img = cv2.resize(img, (320, 240))
+            uint_img = (np_img * 255).astype(np.uint8)
             sys.stdout.buffer.write(uint_img.tostring())
         except KeyboardInterrupt:
             break
